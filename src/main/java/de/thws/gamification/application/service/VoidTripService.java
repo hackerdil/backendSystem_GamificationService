@@ -1,0 +1,34 @@
+package de.thws.gamification.application.service;
+
+import de.thws.gamification.application.ports.in.VoidTripUseCase;
+import de.thws.gamification.application.ports.out.TripReportRepository;
+import de.thws.gamification.domain.model.TripReport;
+
+import java.util.NoSuchElementException;
+import java.util.UUID;
+
+public class VoidTripService implements VoidTripUseCase {
+
+    private final TripReportRepository tripReportRepository;
+    public VoidTripService(TripReportRepository tripReportRepository) {
+        this.tripReportRepository = tripReportRepository;
+    }
+
+    public void voidTrip(UUID tripId){
+        if (tripId==null){
+            throw new IllegalArgumentException("tripıd 0 olamaz");
+        }
+        TripReport report = tripReportRepository.findById(tripId)
+                .orElseThrow(()->new NoSuchElementException("trip bulunamadı:"+tripId));
+        // 2) Zaten void ise bir şey yapmaya gerek yok (idempotent davranış)
+
+        if (report.isVoided()){
+            return;
+        }
+
+        report.markVoided();
+
+        tripReportRepository.save(report);
+    }
+
+}
